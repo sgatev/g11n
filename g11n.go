@@ -9,9 +9,22 @@ const (
 	embeddedMessageTag = "embed"
 )
 
+// formatter represents a type that supports custom g11n formatting.
+type formatter interface {
+
+	// Formats a type in a specific way when passed to a g11n message.
+	G11n() string
+}
+
 // materializeValue extracts the data from a reflected value and returns it.
 func materializeValue(value reflect.Value) interface{} {
-	return value.Interface()
+	i := value.Interface()
+
+	if formatter, ok := i.(formatter); ok {
+		return formatter.G11n()
+	}
+
+	return i
 }
 
 // messageHandler creates a handler formats a message based on provided parameters.

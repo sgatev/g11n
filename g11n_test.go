@@ -6,6 +6,12 @@ import (
 	. "github.com/s2gatev/g11n"
 )
 
+type CustomFormat struct{}
+
+func (cf CustomFormat) G11n() string {
+	return "<ops>This works</ops>"
+}
+
 func testStringsEqual(t *testing.T, actual, expected string) {
 	if actual != expected {
 		t.Errorf("Expected strings to be equal, buuut...\n"+
@@ -36,4 +42,16 @@ func TestEmbedMessageWithNumberArguments(t *testing.T) {
 	testStringsEqual(t,
 		m.MyLittleSomething(42, 3.14),
 		"And yeah, it works: 42 3.14")
+}
+
+func TestEmbedMessageWithCustomFormat(t *testing.T) {
+	type M struct {
+		MyLittleSomething func(CustomFormat) string `embed:"Surprise! %v"`
+	}
+
+	m := Init(&M{}).(*M)
+
+	testStringsEqual(t,
+		m.MyLittleSomething(CustomFormat{}),
+		"Surprise! <ops>This works</ops>")
 }
