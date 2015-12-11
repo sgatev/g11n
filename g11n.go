@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	embeddedMessageTag = "embed"
+	embeddedMessageTag = "default"
 )
 
 // formatter represents a type that supports custom g11n formatting.

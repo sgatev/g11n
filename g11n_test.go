@@ -37,7 +37,7 @@ func testStringsEqual(t *testing.T, actual, expected string) {
 
 func TestEmbedSimpleMessage(t *testing.T) {
 	type M struct {
-		MyLittleSomething func() string `embed:"Not as quick as the brown fox."`
+		MyLittleSomething func() string `default:"Not as quick as the brown fox."`
 	}
 
 	m := Init(&M{}).(*M)
@@ -49,7 +49,7 @@ func TestEmbedSimpleMessage(t *testing.T) {
 
 func TestEmbedMessageWithNumberArguments(t *testing.T) {
 	type M struct {
-		MyLittleSomething func(int, float64) string `embed:"And yeah, it works: %v %v"`
+		MyLittleSomething func(int, float64) string `default:"And yeah, it works: %v %v"`
 	}
 
 	m := Init(&M{}).(*M)
@@ -61,7 +61,7 @@ func TestEmbedMessageWithNumberArguments(t *testing.T) {
 
 func TestEmbedMessageWithCustomFormat(t *testing.T) {
 	type M struct {
-		MyLittleSomething func(CustomFormat) string `embed:"Surprise! %v"`
+		MyLittleSomething func(CustomFormat) string `default:"Surprise! %v"`
 	}
 
 	m := Init(&M{}).(*M)
@@ -75,7 +75,7 @@ func TestEmbedMessageWithCustomFormat(t *testing.T) {
 
 func TestEmbedPluralMessage(t *testing.T) {
 	type M struct {
-		MyLittleSomething func(PluralFormat) string `embed:"Count: %v"`
+		MyLittleSomething func(PluralFormat) string `default:"Count: %v"`
 	}
 
 	m := Init(&M{}).(*M)

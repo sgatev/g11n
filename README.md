@@ -19,13 +19,13 @@ import (
 )
 
 type Messages struct {
-	TheAnswer func(string, int) string `embed:"The answer to %v is %v."`
+	TheAnswer func(string, int) string `default:"The answer to %v is %v."`
 }
 
 func ExampleGopherization() {
 	m := g11n.Init(&Messages{}).(*Messages)
 	fmt.Print(m.TheAnswer("everything", 42))
-  
+
 	// Output:
 	// The answer to everything is 42.
 }
