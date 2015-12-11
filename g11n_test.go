@@ -6,10 +6,25 @@ import (
 	. "github.com/s2gatev/g11n"
 )
 
-type CustomFormat struct{}
+type CustomFormat struct {
+	message func() string
+}
 
 func (cf CustomFormat) G11n() string {
-	return "<ops>This works</ops>"
+	return cf.message()
+}
+
+type PluralFormat int
+
+func (pf PluralFormat) G11n() string {
+	switch pf {
+	case 0:
+		return "some"
+	case 1:
+		return "crazy"
+	default:
+		return "stuff"
+	}
 }
 
 func testStringsEqual(t *testing.T, actual, expected string) {
@@ -52,6 +67,26 @@ func TestEmbedMessageWithCustomFormat(t *testing.T) {
 	m := Init(&M{}).(*M)
 
 	testStringsEqual(t,
-		m.MyLittleSomething(CustomFormat{}),
+		m.MyLittleSomething(CustomFormat{func() string {
+			return "<ops>This works</ops>"
+		}}),
 		"Surprise! <ops>This works</ops>")
+}
+
+func TestEmbedPluralMessage(t *testing.T) {
+	type M struct {
+		MyLittleSomething func(PluralFormat) string `embed:"Count: %v"`
+	}
+
+	m := Init(&M{}).(*M)
+
+	testStringsEqual(t,
+		m.MyLittleSomething(0),
+		"Count: some")
+	testStringsEqual(t,
+		m.MyLittleSomething(1),
+		"Count: crazy")
+	testStringsEqual(t,
+		m.MyLittleSomething(21),
+		"Count: stuff")
 }
