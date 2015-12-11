@@ -1,6 +1,7 @@
 package g11n_test
 
 import (
+	"strings"
 	"testing"
 
 	. "github.com/s2gatev/g11n"
@@ -10,13 +11,13 @@ type CustomFormat struct {
 	message func() string
 }
 
-func (cf CustomFormat) G11n() string {
+func (cf CustomFormat) G11nParam() string {
 	return cf.message()
 }
 
 type PluralFormat int
 
-func (pf PluralFormat) G11n() string {
+func (pf PluralFormat) G11nParam() string {
 	switch pf {
 	case 0:
 		return "some"
@@ -25,6 +26,13 @@ func (pf PluralFormat) G11n() string {
 	default:
 		return "stuff"
 	}
+}
+
+type SafeHtmlFormat string
+
+func (shf SafeHtmlFormat) G11nResult(formattedMessage string) string {
+	r := strings.NewReplacer("<", `\<`, ">", `\>`, "/", `\/`)
+	return r.Replace(formattedMessage)
 }
 
 func testStringsEqual(t *testing.T, actual, expected string) {
@@ -89,4 +97,16 @@ func TestEmbedPluralMessage(t *testing.T) {
 	testStringsEqual(t,
 		m.MyLittleSomething(21),
 		"Count: stuff")
+}
+
+func TestEmbedMessageWithDifferentResult(t *testing.T) {
+	type M struct {
+		MyLittleSomething func() SafeHtmlFormat `default:"<message>Oops!</message>"`
+	}
+
+	m := Init(&M{}).(*M)
+
+	testStringsEqual(t,
+		string(m.MyLittleSomething()),
+		`\<message\>Oops!\<\/message\>`)
 }
