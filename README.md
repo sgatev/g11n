@@ -1,6 +1,6 @@
 # g11n
 
-**g11n** */gopherization/* is an internationalization library that offers:
+**g11n** */gopherization/* is an internationalization library inspired by [GWT](http://www.gwtproject.org/doc/latest/DevGuideI18nMessages.html) that offers:
 
 * Statically-typed messages.
 * Parameterized messages.
