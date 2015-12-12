@@ -2,6 +2,7 @@
 [![Build Status](https://travis-ci.org/s2gatev/g11n.svg?branch=master)](https://travis-ci.org/s2gatev/g11n)
 [![Coverage Status](https://coveralls.io/repos/s2gatev/g11n/badge.svg?branch=master&service=github)](https://coveralls.io/github/s2gatev/g11n?branch=master)
 [![GoDoc](https://godoc.org/github.com/golang/gddo?status.svg)](https://godoc.org/github.com/s2gatev/g11n)
+[![MIT License](http://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 **g11n** */gopherization/* is an internationalization library inspired by [GWT](http://www.gwtproject.org/doc/latest/DevGuideI18nMessages.html) that offers:
 
@@ -33,7 +34,3 @@ func ExampleGopherization() {
 	// The answer to everything is 42.
 }
 ```
-
-## License
-
-The **g11n** library is licensed under the [MIT License](LICENSE).
