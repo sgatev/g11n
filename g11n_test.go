@@ -43,7 +43,20 @@ func testStringsEqual(t *testing.T, actual, expected string) {
 	}
 }
 
-func TestEmbedSimpleMessage(t *testing.T) {
+func testPanic(t *testing.T, expectedMessage string) {
+	if r := recover(); r == nil {
+		t.Errorf("The code did not panic.")
+	} else {
+		actualMessage := r.(string)
+		if expectedMessage != actualMessage {
+			t.Errorf("The panic message was not correct.\n"+
+				"\tExpected: %v\n"+
+				"\tActual: %v\n", expectedMessage, actualMessage)
+		}
+	}
+}
+
+func TestSimpleMessage(t *testing.T) {
 	type M struct {
 		MyLittleSomething func() string `default:"Not as quick as the brown fox."`
 	}
@@ -55,7 +68,7 @@ func TestEmbedSimpleMessage(t *testing.T) {
 		"Not as quick as the brown fox.")
 }
 
-func TestEmbedMessageWithNumberArguments(t *testing.T) {
+func TestMessageWithNumberArguments(t *testing.T) {
 	type M struct {
 		MyLittleSomething func(int, float64) string `default:"And yeah, it works: %v %v"`
 	}
@@ -67,7 +80,7 @@ func TestEmbedMessageWithNumberArguments(t *testing.T) {
 		"And yeah, it works: 42 3.14")
 }
 
-func TestEmbedMessageWithCustomFormat(t *testing.T) {
+func TestMessageWithCustomFormat(t *testing.T) {
 	type M struct {
 		MyLittleSomething func(CustomFormat) string `default:"Surprise! %v"`
 	}
@@ -81,7 +94,7 @@ func TestEmbedMessageWithCustomFormat(t *testing.T) {
 		"Surprise! <ops>This works</ops>")
 }
 
-func TestEmbedPluralMessage(t *testing.T) {
+func TestPluralMessage(t *testing.T) {
 	type M struct {
 		MyLittleSomething func(PluralFormat) string `default:"Count: %v"`
 	}
@@ -99,7 +112,7 @@ func TestEmbedPluralMessage(t *testing.T) {
 		"Count: stuff")
 }
 
-func TestEmbedMessageWithDifferentResult(t *testing.T) {
+func TestMessageWithDifferentResult(t *testing.T) {
 	type M struct {
 		MyLittleSomething func() SafeHtmlFormat `default:"<message>Oops!</message>"`
 	}
@@ -109,4 +122,14 @@ func TestEmbedMessageWithDifferentResult(t *testing.T) {
 	testStringsEqual(t,
 		string(m.MyLittleSomething()),
 		`\<message\>Oops!\<\/message\>`)
+}
+
+func TestMessageWithMultipleResults(t *testing.T) {
+	type M struct {
+		MyLittleSomething func() (string, int) `default:"Oops!"`
+	}
+
+	defer testPanic(t, "Wrong number of results in a g11n message. Expected 1, got 2.")
+
+	Init(&M{})
 }

@@ -7,6 +7,8 @@ import (
 
 const (
 	embeddedMessageTag = "default"
+
+	wrongResultsCountMessage = "Wrong number of results in a g11n message. Expected 1, got %v."
 )
 
 // paramFormatter represents a type that supports custom formatting
@@ -70,6 +72,11 @@ func Init(structPtr interface{}) interface{} {
 		field := concreteType.Field(i)
 		instanceField := instance.FieldByName(field.Name)
 		messagePattern := field.Tag.Get(embeddedMessageTag)
+
+		if field.Type.NumOut() != 1 {
+			panic(fmt.Sprintf(wrongResultsCountMessage, field.Type.NumOut()))
+		}
+
 		resultType := field.Type.Out(0)
 		messageProxyFunc := reflect.MakeFunc(
 			field.Type, messageHandler(messagePattern, resultType))
