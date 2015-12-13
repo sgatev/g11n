@@ -4,13 +4,16 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/s2gatev/g11n/locale"
+	g11nLocale "github.com/s2gatev/g11n/locale"
 )
 
-const (
-	embeddedMessageTag = "default"
+const /* application constants */ (
+	defaultMessageTag = "default"
+)
 
+const /* error message patterns */ (
 	wrongResultsCountMessage = "Wrong number of results in a g11n message. Expected 1, got %v."
+	unknownFormatMessage     = "Unknown locale format '%v'."
 )
 
 // paramFormatter represents a type that supports custom formatting
@@ -29,37 +32,38 @@ type resultFormatter interface {
 	G11nResult(formattedMessage string) string
 }
 
-// materializeValue extracts the data from a reflected value and returns it.
-func materializeValue(value reflect.Value) interface{} {
-	i := value.Interface()
+// formatArg extracts the data from a reflected argument value and returns it.
+func formatArg(value reflect.Value) interface{} {
+	valueInterface := value.Interface()
 
-	if paramFormatter, ok := i.(paramFormatter); ok {
+	if paramFormatter, ok := valueInterface.(paramFormatter); ok {
 		return paramFormatter.G11nParam()
 	}
 
-	return i
+	return valueInterface
 }
 
 // messageHandler creates a handler formats a message based on provided parameters.
 func messageHandler(messagePattern string, resultType reflect.Type) func([]reflect.Value) []reflect.Value {
 	return func(args []reflect.Value) []reflect.Value {
-		var materializedArgs []interface{}
-		for _, arg := range args {
-			materializedArgs = append(materializedArgs, materializeValue(arg))
-		}
-
-		message := fmt.Sprintf(messagePattern, materializedArgs...)
-
-		messageValue := reflect.ValueOf(message)
 		resultValue := reflect.New(resultType).Elem()
 
+		// Format message arguments.
+		var formattedArgs []interface{}
+		for _, arg := range args {
+			formattedArgs = append(formattedArgs, formatArg(arg))
+		}
+
+		// Find the result message value.
+		message := fmt.Sprintf(messagePattern, formattedArgs...)
+		messageValue := reflect.ValueOf(message)
 		if resultFormatter, ok := resultValue.Interface().(resultFormatter); ok {
 			modified := resultFormatter.G11nResult(message)
 			modifiedValue := reflect.ValueOf(modified)
-			resultValue.Set(modifiedValue.Convert(resultType))
-		} else {
-			resultValue.Set(messageValue)
+			messageValue = modifiedValue.Convert(resultType)
 		}
+
+		resultValue.Set(messageValue)
 
 		return []reflect.Value{resultValue}
 	}
@@ -80,12 +84,11 @@ func New() *MessageFactory {
 }
 
 // LoadLocale loads the content of a locale file in the specified format.
-func (mf *MessageFactory) LoadLocale(format, localeName, fileName string) {
-	loaders := locale.Loaders()
-	if loader, ok := loaders[format]; ok {
-		mf.locales[localeName] = loader.Load(fileName)
+func (mf *MessageFactory) LoadLocale(format, locale, fileName string) {
+	if loader, ok := g11nLocale.GetLoader(format); ok {
+		mf.locales[locale] = loader.Load(fileName)
 	} else {
-		panic("Unknown format '" + format + "'.")
+		panic(fmt.Sprintf(unknownFormatMessage, format))
 	}
 }
 
@@ -103,17 +106,19 @@ func (mf *MessageFactory) Init(structPtr interface{}) interface{} {
 	for i := 0; i < concreteType.NumField(); i++ {
 		field := concreteType.Field(i)
 		instanceField := instance.FieldByName(field.Name)
-		messagePattern := field.Tag.Get(embeddedMessageTag)
 
+		// Extract default message.
+		messagePattern := field.Tag.Get(defaultMessageTag)
+
+		// Extract localized message.
 		if locale, ok := mf.locales[mf.activeLocale]; ok {
-			messageKey := fmt.Sprintf("%v.%v",
-				concreteType.Name(),
-				field.Name)
+			messageKey := fmt.Sprintf("%v.%v", concreteType.Name(), field.Name)
 			if message, ok := locale[messageKey]; ok {
 				messagePattern = message
 			}
 		}
 
+		// Check if return type of the message func is correct.
 		if field.Type.NumOut() != 1 {
 			panic(fmt.Sprintf(wrongResultsCountMessage, field.Type.NumOut()))
 		}

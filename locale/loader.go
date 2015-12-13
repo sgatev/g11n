@@ -9,9 +9,10 @@ type Loader interface {
 
 var loaders = map[string]Loader{}
 
-// Loaders returns all registered local loaders for different formats.
-func Loaders() map[string]Loader {
-	return loaders
+// GetLoader returns the locale loader for a specific format.
+func GetLoader(format string) (Loader, bool) {
+	loader, ok := loaders[format]
+	return loader, ok
 }
 
 // RegisterLoader registers a locale loader for specific format.

@@ -166,3 +166,17 @@ func TestLocalizedMessage(t *testing.T) {
 		string(m.MyLittleSomething()),
 		`Котка`)
 }
+
+func TestLocalizedMessageUnknownFormat(t *testing.T) {
+	type M struct {
+		MyLittleSomething func() SafeHtmlFormat `default:"Cat"`
+	}
+
+	bgLocale := tempFile(`
+	M.MyLittleSomething: Котка
+`)
+
+	defer testPanic(t, "Unknown locale format 'custom'.")
+
+	New().LoadLocale("custom", "bg", bgLocale)
+}
