@@ -3,6 +3,8 @@ package g11n
 import (
 	"fmt"
 	"reflect"
+
+	"github.com/s2gatev/g11n/locale"
 )
 
 const (
@@ -63,8 +65,38 @@ func messageHandler(messagePattern string, resultType reflect.Type) func([]refle
 	}
 }
 
+// MessageFactory initializes message structs and provides language
+// translations to messages.
+type MessageFactory struct {
+	activeLocale string
+	locales      map[string]map[string]string
+}
+
+// New returns a fresh G11n message factory.
+func New() *MessageFactory {
+	return &MessageFactory{
+		locales: map[string]map[string]string{},
+	}
+}
+
+// LoadLocale loads the content of a locale file in the specified format.
+func (mf *MessageFactory) LoadLocale(format, localeName, fileName string) {
+	loaders := locale.Loaders()
+	if loader, ok := loaders[format]; ok {
+		mf.locales[localeName] = loader.Load(fileName)
+	} else {
+		panic("Unknown format '" + format + "'.")
+	}
+}
+
+// SetLocale sets the currently active locale for the messages generated
+// by this factory.
+func (mf *MessageFactory) SetLocale(locale string) {
+	mf.activeLocale = locale
+}
+
 // Init initializes the message fields of a structure pointer.
-func Init(structPtr interface{}) interface{} {
+func (mf *MessageFactory) Init(structPtr interface{}) interface{} {
 	instance := reflect.ValueOf(structPtr).Elem()
 
 	concreteType := instance.Type()
@@ -72,6 +104,15 @@ func Init(structPtr interface{}) interface{} {
 		field := concreteType.Field(i)
 		instanceField := instance.FieldByName(field.Name)
 		messagePattern := field.Tag.Get(embeddedMessageTag)
+
+		if locale, ok := mf.locales[mf.activeLocale]; ok {
+			messageKey := fmt.Sprintf("%v.%v",
+				concreteType.Name(),
+				field.Name)
+			if message, ok := locale[messageKey]; ok {
+				messagePattern = message
+			}
+		}
 
 		if field.Type.NumOut() != 1 {
 			panic(fmt.Sprintf(wrongResultsCountMessage, field.Type.NumOut()))

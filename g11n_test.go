@@ -1,6 +1,7 @@
 package g11n_test
 
 import (
+	"io/ioutil"
 	"strings"
 	"testing"
 
@@ -56,12 +57,21 @@ func testPanic(t *testing.T, expectedMessage string) {
 	}
 }
 
+func tempFile(content string) string {
+	file, err := ioutil.TempFile("", "g11n")
+	if err != nil {
+		panic(err)
+	}
+	ioutil.WriteFile(file.Name(), []byte(content), 0644)
+	return file.Name()
+}
+
 func TestSimpleMessage(t *testing.T) {
 	type M struct {
 		MyLittleSomething func() string `default:"Not as quick as the brown fox."`
 	}
 
-	m := Init(&M{}).(*M)
+	m := New().Init(&M{}).(*M)
 
 	testStringsEqual(t,
 		m.MyLittleSomething(),
@@ -73,7 +83,7 @@ func TestMessageWithNumberArguments(t *testing.T) {
 		MyLittleSomething func(int, float64) string `default:"And yeah, it works: %v %v"`
 	}
 
-	m := Init(&M{}).(*M)
+	m := New().Init(&M{}).(*M)
 
 	testStringsEqual(t,
 		m.MyLittleSomething(42, 3.14),
@@ -85,7 +95,7 @@ func TestMessageWithCustomFormat(t *testing.T) {
 		MyLittleSomething func(CustomFormat) string `default:"Surprise! %v"`
 	}
 
-	m := Init(&M{}).(*M)
+	m := New().Init(&M{}).(*M)
 
 	testStringsEqual(t,
 		m.MyLittleSomething(CustomFormat{func() string {
@@ -99,7 +109,7 @@ func TestPluralMessage(t *testing.T) {
 		MyLittleSomething func(PluralFormat) string `default:"Count: %v"`
 	}
 
-	m := Init(&M{}).(*M)
+	m := New().Init(&M{}).(*M)
 
 	testStringsEqual(t,
 		m.MyLittleSomething(0),
@@ -117,7 +127,7 @@ func TestMessageWithDifferentResult(t *testing.T) {
 		MyLittleSomething func() SafeHtmlFormat `default:"<message>Oops!</message>"`
 	}
 
-	m := Init(&M{}).(*M)
+	m := New().Init(&M{}).(*M)
 
 	testStringsEqual(t,
 		string(m.MyLittleSomething()),
@@ -131,5 +141,28 @@ func TestMessageWithMultipleResults(t *testing.T) {
 
 	defer testPanic(t, "Wrong number of results in a g11n message. Expected 1, got 2.")
 
-	Init(&M{})
+	New().Init(&M{})
+}
+
+func TestLocalizedMessage(t *testing.T) {
+	type M struct {
+		MyLittleSomething func() SafeHtmlFormat `default:"Cat"`
+	}
+
+	bgLocale := tempFile(`
+	{
+	  "M.MyLittleSomething": "Котка"
+	}
+`)
+
+	factory := New()
+
+	factory.LoadLocale("json", "bg", bgLocale)
+	factory.SetLocale("bg")
+
+	m := factory.Init(&M{}).(*M)
+
+	testStringsEqual(t,
+		string(m.MyLittleSomething()),
+		`Котка`)
 }
