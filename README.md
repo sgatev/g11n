@@ -1,4 +1,6 @@
 # g11n
+
+[![Join the chat at https://gitter.im/s2gatev/g11n](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/s2gatev/g11n?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Build Status](https://travis-ci.org/s2gatev/g11n.svg?branch=master)](https://travis-ci.org/s2gatev/g11n)
 [![Coverage Status](https://coveralls.io/repos/s2gatev/g11n/badge.svg?branch=master&service=github)](https://coveralls.io/github/s2gatev/g11n?branch=master)
 [![GoDoc](https://godoc.org/github.com/golang/gddo?status.svg)](https://godoc.org/github.com/s2gatev/g11n)
