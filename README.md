@@ -12,8 +12,6 @@
 * Parameterized messages.
 * Extendable message formatting.
 
-## Example
-
 ```go
 package main
 
