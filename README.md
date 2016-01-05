@@ -11,6 +11,7 @@
 * Statically-typed message keys.
 * Parameterized messages.
 * Extendable message formatting.
+* Custom localization file format.
 
 ```go
 package main
