@@ -32,8 +32,8 @@ type resultFormatter interface {
 	G11nResult(formattedMessage string) string
 }
 
-// formatArg extracts the data from a reflected argument value and returns it.
-func formatArg(value reflect.Value) interface{} {
+// formatParam extracts the data from a reflected argument value and returns it.
+func formatParam(value reflect.Value) interface{} {
 	valueInterface := value.Interface()
 
 	if paramFormatter, ok := valueInterface.(paramFormatter); ok {
@@ -43,26 +43,25 @@ func formatArg(value reflect.Value) interface{} {
 	return valueInterface
 }
 
-// messageHandler creates a handler formats a message based on provided parameters.
+// messageHandler creates a handler that formats a message based on provided parameters.
 func messageHandler(messagePattern string, resultType reflect.Type) func([]reflect.Value) []reflect.Value {
 	return func(args []reflect.Value) []reflect.Value {
-		resultValue := reflect.New(resultType).Elem()
-
-		// Format message arguments.
-		var formattedArgs []interface{}
+		// Format message parameters.
+		var formattedParams []interface{}
 		for _, arg := range args {
-			formattedArgs = append(formattedArgs, formatArg(arg))
+			formattedParams = append(formattedParams, formatParam(arg))
 		}
 
 		// Find the result message value.
-		message := fmt.Sprintf(messagePattern, formattedArgs...)
+		message := fmt.Sprintf(messagePattern, formattedParams...)
 		messageValue := reflect.ValueOf(message)
-		if resultFormatter, ok := resultValue.Interface().(resultFormatter); ok {
-			modified := resultFormatter.G11nResult(message)
-			modifiedValue := reflect.ValueOf(modified)
-			messageValue = modifiedValue.Convert(resultType)
-		}
 
+		// Format message result.
+		resultValue := reflect.New(resultType).Elem()
+		if resultFormatter, ok := resultValue.Interface().(resultFormatter); ok {
+			formattedResult := resultFormatter.G11nResult(message)
+			messageValue = reflect.ValueOf(formattedResult).Convert(resultType)
+		}
 		resultValue.Set(messageValue)
 
 		return []reflect.Value{resultValue}
@@ -101,8 +100,9 @@ func (mf *MessageFactory) SetLocale(locale string) {
 // Init initializes the message fields of a structure pointer.
 func (mf *MessageFactory) Init(structPtr interface{}) interface{} {
 	instance := reflect.ValueOf(structPtr).Elem()
-
 	concreteType := instance.Type()
+
+	// Initialize each message func of the struct.
 	for i := 0; i < concreteType.NumField(); i++ {
 		field := concreteType.Field(i)
 		instanceField := instance.FieldByName(field.Name)
@@ -122,10 +122,12 @@ func (mf *MessageFactory) Init(structPtr interface{}) interface{} {
 		if field.Type.NumOut() != 1 {
 			panic(fmt.Sprintf(wrongResultsCountMessage, field.Type.NumOut()))
 		}
-
 		resultType := field.Type.Out(0)
+
+		// Create proxy function for handling the message.
 		messageProxyFunc := reflect.MakeFunc(
 			field.Type, messageHandler(messagePattern, resultType))
+
 		instanceField.Set(messageProxyFunc)
 	}
 
