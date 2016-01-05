@@ -8,10 +8,10 @@
 
 **g11n** */gopherization/* is an internationalization library inspired by [GWT](http://www.gwtproject.org/doc/latest/DevGuideI18nMessages.html) that offers:
 
-* Statically-typed message keys.
-* Parameterized messages.
-* Extendable message formatting.
-* Custom localization file format.
+* **Statically-typed** message keys.
+* **Parameterized** messages.
+* **Extendable** message formatting.
+* **Custom** localization **file format**.
 
 ```go
 package main
