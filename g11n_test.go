@@ -191,8 +191,8 @@ func TestInitAsync(t *testing.T) {
 
 	s.Await()
 
-	if !s.IsDone() {
-		t.Errorf("Expected async initialization to be done.")
+	if !s.Completed() {
+		t.Errorf("Expected async initialization to be completed.")
 	}
 
 	testStringsEqual(t,

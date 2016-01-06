@@ -19,17 +19,19 @@ const /* error message patterns */ (
 
 // Synchronizer synchronizes asynchronous tasks.
 type Synchronizer struct {
-	tasks  *sync.WaitGroup
-	isDone bool
+	tasks     *sync.WaitGroup
+	completed bool
 }
 
+// Await awaits the completion of the tasks.
 func (s *Synchronizer) Await() {
 	s.tasks.Wait()
-	s.isDone = true
+	s.completed = true
 }
 
-func (s *Synchronizer) IsDone() bool {
-	return s.isDone
+// Completed returns whether the tasks are already completed.
+func (s *Synchronizer) Completed() bool {
+	return s.completed
 }
 
 // paramFormatter represents a type that supports custom formatting
