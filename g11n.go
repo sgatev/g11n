@@ -26,7 +26,6 @@ type Synchronizer struct {
 // Await awaits the completion of the tasks.
 func (s *Synchronizer) Await() {
 	s.tasks.Wait()
-	s.completed = true
 }
 
 // Completed returns whether the tasks are already completed.
@@ -131,6 +130,7 @@ func (mf *MessageFactory) InitAsync(structPtr interface{}) (interface{}, *Synchr
 	go func() {
 		mf.initializeStruct(structPtr)
 		initializers.Done()
+		synchronizer.completed = true
 	}()
 
 	return structPtr, synchronizer
