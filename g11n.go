@@ -8,11 +8,13 @@ import (
 	g11nLocale "github.com/s2gatev/g11n/locale"
 )
 
-const /* application constants */ (
+// Application constants.
+const (
 	defaultMessageTag = "default"
 )
 
-const /* error message patterns */ (
+// Error message patterns.
+const (
 	wrongResultsCountMessage = "Wrong number of results in a g11n message. Expected 1, got %v."
 	unknownFormatMessage     = "Unknown locale format '%v'."
 )
@@ -154,41 +156,54 @@ func (mf *MessageFactory) initializeStruct(structPtr interface{}) {
 		field := concreteType.Field(i)
 		instanceField := instance.FieldByName(field.Name)
 
-		// Extract default message.
-		messagePattern := field.Tag.Get(defaultMessageTag)
-
-		// Extract localized message.
-		if locale, ok := mf.locales[mf.activeLocale]; ok {
-			messageKey := fmt.Sprintf("%v.%v", concreteType.Name(), field.Name)
-			if message, ok := locale[messageKey]; ok {
-				messagePattern = message
-			}
-		}
-
 		if field.Anonymous {
-			// Embedded struct.
-
-			// Create the embedded struct.
-			embeddedStruct := reflect.New(field.Type.Elem())
-			instanceField.Set(embeddedStruct)
-
-			// Initialize the messages of the embedded struct.
-			mf.initializeStruct(embeddedStruct.Interface())
+			mf.initializeEmbeddedStruct(field, instanceField)
 		} else {
-			// Field.
-
-			// Check if return type of the message func is correct.
-			if field.Type.NumOut() != 1 {
-				panic(fmt.Sprintf(wrongResultsCountMessage, field.Type.NumOut()))
-			}
-
-			resultType := field.Type.Out(0)
-
-			// Create proxy function for handling the message.
-			messageProxyFunc := reflect.MakeFunc(
-				field.Type, messageHandler(messagePattern, resultType))
-
-			instanceField.Set(messageProxyFunc)
+			mf.initializeField(concreteType, field, instanceField)
 		}
 	}
+}
+
+// initializeEmbeddedStruct initializes the message fields of an embedded struct.
+func (mf *MessageFactory) initializeEmbeddedStruct(
+	field reflect.StructField,
+	instanceField reflect.Value) {
+
+	// Create the embedded struct.
+	embeddedStruct := reflect.New(field.Type.Elem())
+	instanceField.Set(embeddedStruct)
+
+	// Initialize the messages of the embedded struct.
+	mf.initializeStruct(embeddedStruct.Interface())
+}
+
+// initializeField initializes a message field.
+func (mf *MessageFactory) initializeField(
+	concreteType reflect.Type,
+	field reflect.StructField,
+	instanceField reflect.Value) {
+
+	// Extract default message.
+	messagePattern := field.Tag.Get(defaultMessageTag)
+
+	// Extract localized message.
+	if locale, ok := mf.locales[mf.activeLocale]; ok {
+		messageKey := fmt.Sprintf("%v.%v", concreteType.Name(), field.Name)
+		if message, ok := locale[messageKey]; ok {
+			messagePattern = message
+		}
+	}
+
+	// Check if return type of the message func is correct.
+	if field.Type.NumOut() != 1 {
+		panic(fmt.Sprintf(wrongResultsCountMessage, field.Type.NumOut()))
+	}
+
+	resultType := field.Type.Out(0)
+
+	// Create proxy function for handling the message.
+	messageProxyFunc := reflect.MakeFunc(
+		field.Type, messageHandler(messagePattern, resultType))
+
+	instanceField.Set(messageProxyFunc)
 }
