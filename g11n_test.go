@@ -8,14 +8,6 @@ import (
 	. "github.com/s2gatev/g11n/test"
 )
 
-func testCompleted(t *testing.T, synchronizer *Synchronizer, expected bool) {
-	if actual := synchronizer.Completed(); actual != expected {
-		t.Errorf("Asynchronous initialization status is not the same as expected.\n"+
-			"\tActual: %v\n"+
-			"\tExpected: %v\n", actual, expected)
-	}
-}
-
 func testMessage(t *testing.T, actual, expected string) {
 	if actual != expected {
 		t.Errorf("Message is not the same as expected.\n"+
@@ -153,22 +145,6 @@ func TestLocalizedMessageUnknownFormat(t *testing.T) {
 	defer TestPanic(t, "Unknown locale format 'custom'.")
 
 	New().LoadLocale("custom", "bg", bgLocale)
-}
-
-func TestInitAsync(t *testing.T) {
-	type M struct {
-		MyLittleSomething func() string `default:"Not as quick as the brown fox."`
-	}
-
-	a, s := New().InitAsync(&M{})
-	m := a.(*M)
-
-	s.Await()
-
-	testCompleted(t, s, true)
-	testMessage(t,
-		m.MyLittleSomething(),
-		"Not as quick as the brown fox.")
 }
 
 type CustomFormat struct {

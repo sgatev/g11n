@@ -3,7 +3,6 @@ package g11n
 import (
 	"fmt"
 	"reflect"
-	"sync"
 
 	g11nLocale "github.com/s2gatev/g11n/locale"
 )
@@ -18,26 +17,6 @@ const (
 	wrongResultsCountMessage = "Wrong number of results in a g11n message. Expected 1, got %v."
 	unknownFormatMessage     = "Unknown locale format '%v'."
 )
-
-// Synchronizer synchronizes asynchronous tasks.
-type Synchronizer struct {
-	tasks     *sync.WaitGroup
-	completed bool
-	sync.RWMutex
-}
-
-// Await awaits the completion of the tasks.
-func (s *Synchronizer) Await() {
-	s.tasks.Wait()
-}
-
-// Completed returns whether the tasks are already completed.
-func (s *Synchronizer) Completed() bool {
-	s.RLock()
-	defer s.RUnlock()
-
-	return s.completed
-}
 
 // paramFormatter represents a type that supports custom formatting
 // when it is used as parameter in a call to a g11n message.
@@ -125,25 +104,6 @@ func (mf *MessageFactory) Init(structPtr interface{}) interface{} {
 	mf.initializeStruct(structPtr)
 
 	return structPtr
-}
-
-// InitAsync initializes the message fields of a structure pointer asynchronously.
-func (mf *MessageFactory) InitAsync(structPtr interface{}) (interface{}, *Synchronizer) {
-	var initializers sync.WaitGroup
-	synchronizer := &Synchronizer{tasks: &initializers}
-
-	initializers.Add(1)
-	go func() {
-		mf.initializeStruct(structPtr)
-		initializers.Done()
-
-		synchronizer.Lock()
-		defer synchronizer.Unlock()
-
-		synchronizer.completed = true
-	}()
-
-	return structPtr, synchronizer
 }
 
 // initializeStruct initializes the message fields of a struct pointer.
