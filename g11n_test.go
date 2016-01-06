@@ -5,7 +5,24 @@ import (
 	"testing"
 
 	. "github.com/s2gatev/g11n"
+	. "github.com/s2gatev/g11n/test"
 )
+
+func testCompleted(t *testing.T, synchronizer *Synchronizer, expected bool) {
+	if actual := synchronizer.Completed(); actual != expected {
+		t.Errorf("Asynchronous initialization status is not the same as expected.\n"+
+			"\tActual: %v\n"+
+			"\tExpected: %v\n", actual, expected)
+	}
+}
+
+func testMessage(t *testing.T, actual, expected string) {
+	if actual != expected {
+		t.Errorf("Message is not the same as expected.\n"+
+			"\tActual: %v\n"+
+			"\tExpected: %v\n", actual, expected)
+	}
+}
 
 func TestSimpleMessage(t *testing.T) {
 	type M struct {
@@ -80,7 +97,7 @@ func TestMessageWithMultipleResults(t *testing.T) {
 		MyLittleSomething func() (string, int) `default:"Oops!"`
 	}
 
-	defer testPanic(t, "Wrong number of results in a g11n message. Expected 1, got 2.")
+	defer TestPanic(t, "Wrong number of results in a g11n message. Expected 1, got 2.")
 
 	New().Init(&M{})
 }
@@ -90,7 +107,7 @@ func TestLocalizedMessage(t *testing.T) {
 		MyLittleSomething func() SafeHTMLFormat `default:"Cat"`
 	}
 
-	bgLocale := tempFile(`
+	bgLocale := TempFile(`
 	{
 	  "M.MyLittleSomething": "Котка"
 	}
@@ -113,11 +130,11 @@ func TestLocalizedMessageUnknownFormat(t *testing.T) {
 		MyLittleSomething func() SafeHTMLFormat `default:"Cat"`
 	}
 
-	bgLocale := tempFile(`
+	bgLocale := TempFile(`
 	M.MyLittleSomething: Котка
 `)
 
-	defer testPanic(t, "Unknown locale format 'custom'.")
+	defer TestPanic(t, "Unknown locale format 'custom'.")
 
 	New().LoadLocale("custom", "bg", bgLocale)
 }
