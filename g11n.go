@@ -146,7 +146,7 @@ func (mf *MessageFactory) InitAsync(structPtr interface{}) (interface{}, *Synchr
 
 // initializeStruct initializes the message fields of a struct pointer.
 func (mf *MessageFactory) initializeStruct(structPtr interface{}) {
-	instance := reflect.ValueOf(structPtr).Elem()
+	instance := reflect.Indirect(reflect.ValueOf(structPtr))
 	concreteType := instance.Type()
 
 	// Initialize each message func of the struct.
@@ -165,16 +165,30 @@ func (mf *MessageFactory) initializeStruct(structPtr interface{}) {
 			}
 		}
 
-		// Check if return type of the message func is correct.
-		if field.Type.NumOut() != 1 {
-			panic(fmt.Sprintf(wrongResultsCountMessage, field.Type.NumOut()))
+		if field.Anonymous {
+			// Embedded struct.
+
+			// Create the embedded struct.
+			embeddedStruct := reflect.New(field.Type.Elem())
+			instanceField.Set(embeddedStruct)
+
+			// Initialize the messages of the embedded struct.
+			mf.initializeStruct(embeddedStruct.Interface())
+		} else {
+			// Field.
+
+			// Check if return type of the message func is correct.
+			if field.Type.NumOut() != 1 {
+				panic(fmt.Sprintf(wrongResultsCountMessage, field.Type.NumOut()))
+			}
+
+			resultType := field.Type.Out(0)
+
+			// Create proxy function for handling the message.
+			messageProxyFunc := reflect.MakeFunc(
+				field.Type, messageHandler(messagePattern, resultType))
+
+			instanceField.Set(messageProxyFunc)
 		}
-		resultType := field.Type.Out(0)
-
-		// Create proxy function for handling the message.
-		messageProxyFunc := reflect.MakeFunc(
-			field.Type, messageHandler(messagePattern, resultType))
-
-		instanceField.Set(messageProxyFunc)
 	}
 }

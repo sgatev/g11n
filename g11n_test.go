@@ -36,6 +36,22 @@ func TestSimpleMessage(t *testing.T) {
 		"Not as quick as the brown fox.")
 }
 
+func TestInitEmbeddedStruct(t *testing.T) {
+	type N struct {
+		MyLittleSomething func() string `default:"Not as quick as the brown fox."`
+	}
+
+	type M struct {
+		*N
+	}
+
+	m := New().Init(&M{}).(*M)
+
+	testMessage(t,
+		m.MyLittleSomething(),
+		"Not as quick as the brown fox.")
+}
+
 func TestMessageWithNumberArguments(t *testing.T) {
 	type M struct {
 		MyLittleSomething func(int, float64) string `default:"And yeah, it works: %v %v"`
