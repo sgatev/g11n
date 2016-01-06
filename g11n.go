@@ -3,6 +3,7 @@ package g11n
 import (
 	"fmt"
 	"reflect"
+	"sync"
 
 	g11nLocale "github.com/s2gatev/g11n/locale"
 )
@@ -15,6 +16,21 @@ const /* error message patterns */ (
 	wrongResultsCountMessage = "Wrong number of results in a g11n message. Expected 1, got %v."
 	unknownFormatMessage     = "Unknown locale format '%v'."
 )
+
+// Synchronizer synchronizes asynchronous tasks.
+type Synchronizer struct {
+	tasks  *sync.WaitGroup
+	isDone bool
+}
+
+func (s *Synchronizer) Await() {
+	s.tasks.Wait()
+	s.isDone = true
+}
+
+func (s *Synchronizer) IsDone() bool {
+	return s.isDone
+}
 
 // paramFormatter represents a type that supports custom formatting
 // when it is used as parameter in a call to a g11n message.
@@ -99,6 +115,27 @@ func (mf *MessageFactory) SetLocale(locale string) {
 
 // Init initializes the message fields of a structure pointer.
 func (mf *MessageFactory) Init(structPtr interface{}) interface{} {
+	mf.initializeStruct(structPtr)
+
+	return structPtr
+}
+
+// InitAsync initializes the message fields of a structure pointer asynchronously.
+func (mf *MessageFactory) InitAsync(structPtr interface{}) (interface{}, *Synchronizer) {
+	var initializers sync.WaitGroup
+	synchronizer := &Synchronizer{tasks: &initializers}
+
+	initializers.Add(1)
+	go func() {
+		mf.initializeStruct(structPtr)
+		initializers.Done()
+	}()
+
+	return structPtr, synchronizer
+}
+
+// initializeStruct initializes the message fields of a struct pointer.
+func (mf *MessageFactory) initializeStruct(structPtr interface{}) {
 	instance := reflect.ValueOf(structPtr).Elem()
 	concreteType := instance.Type()
 
@@ -130,6 +167,4 @@ func (mf *MessageFactory) Init(structPtr interface{}) interface{} {
 
 		instanceField.Set(messageProxyFunc)
 	}
-
-	return structPtr
 }

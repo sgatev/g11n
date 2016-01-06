@@ -180,3 +180,22 @@ func TestLocalizedMessageUnknownFormat(t *testing.T) {
 
 	New().LoadLocale("custom", "bg", bgLocale)
 }
+
+func TestInitAsync(t *testing.T) {
+	type M struct {
+		MyLittleSomething func() string `default:"Not as quick as the brown fox."`
+	}
+
+	a, s := New().InitAsync(&M{})
+	m := a.(*M)
+
+	s.Await()
+
+	if !s.IsDone() {
+		t.Errorf("Expected async initialization to be done.")
+	}
+
+	testStringsEqual(t,
+		m.MyLittleSomething(),
+		"Not as quick as the brown fox.")
+}
