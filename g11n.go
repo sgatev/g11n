@@ -21,6 +21,7 @@ const /* error message patterns */ (
 type Synchronizer struct {
 	tasks     *sync.WaitGroup
 	completed bool
+	sync.RWMutex
 }
 
 // Await awaits the completion of the tasks.
@@ -30,6 +31,9 @@ func (s *Synchronizer) Await() {
 
 // Completed returns whether the tasks are already completed.
 func (s *Synchronizer) Completed() bool {
+	s.RLock()
+	defer s.RUnlock()
+
 	return s.completed
 }
 
@@ -130,6 +134,10 @@ func (mf *MessageFactory) InitAsync(structPtr interface{}) (interface{}, *Synchr
 	go func() {
 		mf.initializeStruct(structPtr)
 		initializers.Done()
+
+		synchronizer.Lock()
+		defer synchronizer.Unlock()
+
 		synchronizer.completed = true
 	}()
 
