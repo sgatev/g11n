@@ -5,9 +5,9 @@ import (
 	"testing"
 )
 
-// TestPanic expects a panic in the current goroutine and verifies its
+// MustPanic expects a panic in the current goroutine and verifies its
 // message against an expected one.
-func TestPanic(t *testing.T, expectedMessage string) {
+func MustPanic(t *testing.T, expectedMessage string) {
 	if r := recover(); r == nil {
 		t.Errorf("The code did not panic.")
 	} else {

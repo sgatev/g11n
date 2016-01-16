@@ -105,7 +105,7 @@ func TestMessageWithMultipleResults(t *testing.T) {
 		MyLittleSomething func() (string, int) `default:"Oops!"`
 	}
 
-	defer TestPanic(t, "Wrong number of results in a g11n message. Expected 1, got 2.")
+	defer MustPanic(t, "Wrong number of results in a g11n message. Expected 1, got 2.")
 
 	New().Init(&M{})
 }
@@ -142,7 +142,7 @@ func TestLocalizedMessageUnknownFormat(t *testing.T) {
 	M.MyLittleSomething: Котка
 `)
 
-	defer TestPanic(t, "Unknown locale format 'custom'.")
+	defer MustPanic(t, "Unknown locale format 'custom'.")
 
 	New().LoadLocale("custom", "bg", bgLocale)
 }

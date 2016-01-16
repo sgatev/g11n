@@ -1,4 +1,4 @@
-// g11n is an internationalization library that offers:
+// Package g11n is an internationalization library that offers:
 //
 //	* Statically-typed message keys.
 //	* Parameterized messages.
