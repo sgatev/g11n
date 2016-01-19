@@ -35,12 +35,38 @@
 //	G.SetLocale("en")
 //
 //
-// III. Format result
+// III. Format parameters
+//
+// The parameters of a message call could be formatted by declaring a special
+// type that implements
+//	G11nParam() string
+// The format method G11nParam is invoked before substituting a parameter in the message.
+//
+//
+//	type PluralFormat int
+//
+//	func (pf PluralFormat) G11nParam() string {
+//		switch pf {
+//		case 0:
+//			return "some"
+//		case 1:
+//			return "crazy"
+//		default:
+//			return "stuff"
+//		}
+//	}
+//
+//	type M struct {
+//		MyLittleSomething func(PluralFormat) string `default:"Count: %v"`
+//	}
+//
+//
+// IV. Format result
 //
 // The result of a message call could be further formatted by declaring a special
 // result type that implements
 //	G11nResult(formattedMessage string) string
-// The format method is invoked after all parameters have been substituted in the message.
+// The format method G11nResult is invoked after all parameters have been substituted in the message.
 //
 //	type SafeHTMLFormat string
 //
