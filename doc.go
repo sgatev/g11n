@@ -30,6 +30,13 @@
 //
 // II. Choosing locale
 //
+// Load a locale in the g11n instance.
+//
+//	G.LoadLocale("json", "bg", bgLocalePath)
+//
+// Different locale loaders could be registered by implementing the locale.Loader
+// interface.
+//
 // Specify the locale for every message struct initialized by this g11n instance.
 //
 //	G.SetLocale("en")
