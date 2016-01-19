@@ -34,4 +34,22 @@
 //
 //	G.SetLocale("en")
 //
+//
+// III. Format result
+//
+// The result of a message call could be further formatted by declaring a special
+// result type that implements
+//	G11nResult(formattedMessage string) string
+// The format method is invoked after all parameters have been substituted in the message.
+//
+//	type SafeHTMLFormat string
+//
+//	func (shf SafeHTMLFormat) G11nResult(formattedMessage string) string {
+//		r := strings.NewReplacer("<", `\<`, ">", `\>`, "/", `\/`)
+//		return r.Replace(formattedMessage)
+//	}
+//
+//	type M struct {
+//		MyLittleSomething func() SafeHTMLFormat `default:"<message>Oops!</message>"`
+//	}
 package g11n
