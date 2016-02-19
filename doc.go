@@ -46,9 +46,10 @@
 //
 // The parameters of a message call could be formatted by declaring a special
 // type that implements
-//	G11nParam() string
-// The format method G11nParam is invoked before substituting a parameter in the message.
 //
+//	G11nParam() string
+//
+// The format method G11nParam is invoked before substituting a parameter in the message.
 //
 //	type PluralFormat int
 //
@@ -72,7 +73,9 @@
 //
 // The result of a message call could be further formatted by declaring a special
 // result type that implements
+//
 //	G11nResult(formattedMessage string) string
+//
 // The format method G11nResult is invoked after all parameters have been substituted in the message.
 //
 //	type SafeHTMLFormat string

@@ -19,5 +19,5 @@
 //
 // III. Built-in locale loaders
 //
-// *g11n* comes with two built-in locale loaders - *"json"* and *"yaml"*.
+// g11n comes with two built-in locale loaders - "json" and "yaml".
 package locale
