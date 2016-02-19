@@ -16,6 +16,19 @@ func testMessage(t *testing.T, actual, expected string) {
 	}
 }
 
+func TestInitVar(t *testing.T) {
+	type M struct {
+		MyLittleSomething func() string `default:"Not as quick as the brown fox."`
+	}
+
+	var m M
+	New().Init(&m)
+
+	testMessage(t,
+		m.MyLittleSomething(),
+		"Not as quick as the brown fox.")
+}
+
 func TestSimpleMessage(t *testing.T) {
 	type M struct {
 		MyLittleSomething func() string `default:"Not as quick as the brown fox."`
