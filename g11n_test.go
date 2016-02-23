@@ -29,7 +29,7 @@ func TestInitVar(t *testing.T) {
 		"Not as quick as the brown fox.")
 }
 
-func TestSimpleType(t *testing.T) {
+func TestStringReturnType(t *testing.T) {
 	type M struct {
 		MyLittleSomething string `default:"Not as quick as the brown fox."`
 	}
@@ -39,6 +39,18 @@ func TestSimpleType(t *testing.T) {
 	testMessage(t,
 		m.MyLittleSomething,
 		"Not as quick as the brown fox.")
+}
+
+func TestCustomReturnType(t *testing.T) {
+	type M struct {
+		MyLittleSomething func() SafeHTMLFormat `default:"<message>Oops!</message>"`
+	}
+
+	m := New().Init(&M{}).(*M)
+
+	testMessage(t,
+		string(m.MyLittleSomething()),
+		`\<message\>Oops!\<\/message\>`)
 }
 
 func TestSimpleMessage(t *testing.T) {

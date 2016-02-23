@@ -157,6 +157,13 @@ func (mf *MessageFactory) initializeField(
 	if field.Type.Kind() == reflect.String {
 		// Initialize string field.
 
+		message := messagePattern
+
+		// Format message result.
+		if resultFormatter, ok := instanceField.Interface().(resultFormatter); ok {
+			message = resultFormatter.G11nResult(message)
+		}
+
 		instanceField.SetString(messagePattern)
 	} else {
 		// Initialize func field.
