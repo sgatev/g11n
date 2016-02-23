@@ -30,7 +30,8 @@ type Messages struct {
 }
 
 func ExampleGopherization() {
-	m := G.Init(&Messages{}).(*Messages)
+	var m Messages
+	G.Init(&m)
 	fmt.Print(m.TheAnswer("everything", 42))
 
 	// Output:
