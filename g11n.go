@@ -154,16 +154,24 @@ func (mf *MessageFactory) initializeField(
 		}
 	}
 
-	// Check if return type of the message func is correct.
-	if field.Type.NumOut() != 1 {
-		panic(fmt.Sprintf(wrongResultsCountMessage, field.Type.NumOut()))
+	if field.Type.Kind() == reflect.String {
+		// Initialize string field.
+
+		instanceField.SetString(messagePattern)
+	} else {
+		// Initialize func field.
+
+		// Check if return type of the message func is correct.
+		if field.Type.NumOut() != 1 {
+			panic(fmt.Sprintf(wrongResultsCountMessage, field.Type.NumOut()))
+		}
+
+		resultType := field.Type.Out(0)
+
+		// Create proxy function for handling the message.
+		messageProxyFunc := reflect.MakeFunc(
+			field.Type, messageHandler(messagePattern, resultType))
+
+		instanceField.Set(messageProxyFunc)
 	}
-
-	resultType := field.Type.Out(0)
-
-	// Create proxy function for handling the message.
-	messageProxyFunc := reflect.MakeFunc(
-		field.Type, messageHandler(messagePattern, resultType))
-
-	instanceField.Set(messageProxyFunc)
 }
