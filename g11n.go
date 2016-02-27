@@ -164,7 +164,7 @@ func (mf *MessageFactory) initializeField(
 			message = resultFormatter.G11nResult(message)
 		}
 
-		instanceField.SetString(messagePattern)
+		instanceField.SetString(message)
 	} else {
 		// Initialize func field.
 

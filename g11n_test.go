@@ -43,13 +43,13 @@ func TestStringReturnType(t *testing.T) {
 
 func TestCustomReturnType(t *testing.T) {
 	type M struct {
-		MyLittleSomething func() SafeHTMLFormat `default:"<message>Oops!</message>"`
+		MyLittleSomething SafeHTMLFormat `default:"<message>Oops!</message>"`
 	}
 
 	m := New().Init(&M{}).(*M)
 
 	testMessage(t,
-		string(m.MyLittleSomething()),
+		string(m.MyLittleSomething),
 		`\<message\>Oops!\<\/message\>`)
 }
 
