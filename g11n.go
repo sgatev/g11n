@@ -5,6 +5,8 @@ import (
 	"reflect"
 
 	g11nLocale "github.com/s2gatev/g11n/locale"
+
+	"golang.org/x/text/language"
 )
 
 // Application constants.
@@ -16,6 +18,7 @@ const (
 const (
 	wrongResultsCountMessage = "Wrong number of results in a g11n message. Expected 1, got %v."
 	unknownFormatMessage     = "Unknown locale format '%v'."
+	unknownLocaleTag         = "Unknown locale '%v'."
 )
 
 // paramFormatter represents a type that supports custom formatting
@@ -70,33 +73,67 @@ func messageHandler(messagePattern string, resultType reflect.Type) func([]refle
 	}
 }
 
+// localeInfo encapsulates the data required to parse a localization file.
+type localeInfo struct {
+	format string
+	path   string
+}
+
 // MessageFactory initializes message structs and provides language
 // translations to messages.
 type MessageFactory struct {
-	activeLocale string
-	locales      map[string]map[string]string
+	locales    map[language.Tag]localeInfo
+	dictionary map[string]string
 }
 
 // New returns a fresh G11n message factory.
 func New() *MessageFactory {
 	return &MessageFactory{
-		locales: map[string]map[string]string{},
+		dictionary: map[string]string{},
+		locales:    map[language.Tag]localeInfo{},
 	}
 }
 
-// LoadLocale loads the content of a locale file in the specified format.
-func (mf *MessageFactory) LoadLocale(format, locale, fileName string) {
-	if loader, ok := g11nLocale.GetLoader(format); ok {
-		mf.locales[locale] = loader.Load(fileName)
-	} else {
-		panic(fmt.Sprintf(unknownFormatMessage, format))
+// Locales returns the registered locales in a message factory.
+func (mf *MessageFactory) Locales() []language.Tag {
+	locales := make([]language.Tag, 0, len(mf.locales))
+
+	for locale, _ := range mf.locales {
+		locales = append(locales, locale)
+	}
+
+	return locales
+}
+
+// SetLocale registers a locale file in the specified format.
+func (mf *MessageFactory) SetLocale(tag language.Tag, format, path string) {
+	mf.locales[tag] = localeInfo{
+		format: format,
+		path:   path,
 	}
 }
 
-// SetLocale sets the currently active locale for the messages generated
+// SetLocales registers locale files in the specified format.
+func (mf *MessageFactory) SetLocales(locales map[language.Tag]string, format string) {
+	for tag, path := range locales {
+		mf.SetLocale(tag, format, path)
+	}
+}
+
+// LoadLocale sets the currently active locale for the messages generated
 // by this factory.
-func (mf *MessageFactory) SetLocale(locale string) {
-	mf.activeLocale = locale
+func (mf *MessageFactory) LoadLocale(tag language.Tag) {
+	locale, ok := mf.locales[tag]
+	if !ok {
+		panic(fmt.Sprintf(unknownLocaleTag, tag))
+	}
+
+	loader, ok := g11nLocale.GetLoader(locale.format)
+	if !ok {
+		panic(fmt.Sprintf(unknownFormatMessage, locale.format))
+	}
+
+	mf.dictionary = loader.Load(locale.path)
 }
 
 // Init initializes the message fields of a structure pointer.
@@ -147,11 +184,9 @@ func (mf *MessageFactory) initializeField(
 	messagePattern := field.Tag.Get(defaultMessageTag)
 
 	// Extract localized message.
-	if locale, ok := mf.locales[mf.activeLocale]; ok {
-		messageKey := fmt.Sprintf("%v.%v", concreteType.Name(), field.Name)
-		if message, ok := locale[messageKey]; ok {
-			messagePattern = message
-		}
+	messageKey := fmt.Sprintf("%v.%v", concreteType.Name(), field.Name)
+	if message, ok := mf.dictionary[messageKey]; ok {
+		messagePattern = message
 	}
 
 	if field.Type.Kind() == reflect.String {

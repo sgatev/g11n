@@ -1,8 +1,11 @@
 package g11n_test
 
 import (
+	"reflect"
 	"strings"
 	"testing"
+
+	"golang.org/x/text/language"
 
 	. "github.com/s2gatev/g11n"
 	. "github.com/s2gatev/g11n/test"
@@ -147,7 +150,7 @@ func TestMessageWithMultipleResults(t *testing.T) {
 	New().Init(&M{})
 }
 
-func TestLocalizedMessage(t *testing.T) {
+func TestLocalizedMessageSingle(t *testing.T) {
 	type M struct {
 		MyLittleSomething func() SafeHTMLFormat `default:"Cat"`
 	}
@@ -160,8 +163,33 @@ func TestLocalizedMessage(t *testing.T) {
 
 	factory := New()
 
-	factory.LoadLocale("json", "bg", bgLocale)
-	factory.SetLocale("bg")
+	factory.SetLocale(language.Bulgarian, "json", bgLocale)
+	factory.LoadLocale(language.Bulgarian)
+
+	m := factory.Init(&M{}).(*M)
+
+	testMessage(t,
+		string(m.MyLittleSomething()),
+		`Котка`)
+}
+
+func TestLocalizedMessageMultiple(t *testing.T) {
+	type M struct {
+		MyLittleSomething func() SafeHTMLFormat `default:"Cat"`
+	}
+
+	bgLocale := TempFile(`
+	{
+	  "M.MyLittleSomething": "Котка"
+	}
+`)
+
+	factory := New()
+
+	factory.SetLocales(map[language.Tag]string{
+		language.Bulgarian: bgLocale,
+	}, "json")
+	factory.LoadLocale(language.Bulgarian)
 
 	m := factory.Init(&M{}).(*M)
 
@@ -181,7 +209,42 @@ func TestLocalizedMessageUnknownFormat(t *testing.T) {
 
 	defer MustPanic(t, "Unknown locale format 'custom'.")
 
-	New().LoadLocale("custom", "bg", bgLocale)
+	factory := New()
+	factory.SetLocale(language.Bulgarian, "custom", bgLocale)
+	factory.LoadLocale(language.Bulgarian)
+}
+
+func TestLocales(t *testing.T) {
+	factory := New()
+
+	factory.SetLocales(map[language.Tag]string{
+		language.Bulgarian: "",
+		language.Spanish:   "",
+		language.Italian:   "",
+	}, "custom")
+
+	expected := map[language.Tag]struct{}{
+		language.Bulgarian: struct{}{},
+		language.Spanish:   struct{}{},
+		language.Italian:   struct{}{},
+	}
+	actual := map[language.Tag]struct{}{}
+	for _, tag := range factory.Locales() {
+		actual[tag] = struct{}{}
+	}
+
+	if !reflect.DeepEqual(actual, expected) {
+		t.Errorf("Locales are not correct.\n"+
+			"Expected: %v\n"+
+			"Actual: %v\n", expected, actual)
+	}
+}
+
+func TestUnknownLocale(t *testing.T) {
+	defer MustPanic(t, "Unknown locale 'bg'.")
+
+	factory := New()
+	factory.LoadLocale(language.Bulgarian)
 }
 
 type CustomFormat struct {
