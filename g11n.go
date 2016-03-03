@@ -134,6 +134,7 @@ func (mf *MessageFactory) LoadLocale(tag language.Tag) {
 	}
 
 	mf.dictionary = loader.Load(locale.path)
+	fmt.Println(mf.dictionary)
 }
 
 // Init initializes the message fields of a structure pointer.
