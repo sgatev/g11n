@@ -19,22 +19,31 @@ package main
 
 import (
 	"fmt"
+	"net/http"
 
 	"github.com/s2gatev/g11n"
+	locale "github.com/s2gatev/g11n/http"
 )
 
-var G = g11n.New()
-
 type Messages struct {
-	TheAnswer func(string, int) string `default:"The answer to %v is %v."`
+	Hello func(string) string `default:"Hi %v!"`
 }
 
-func ExampleGopherization() {
-	var m Messages
-	G.Init(&m)
-	fmt.Print(m.TheAnswer("everything", 42))
+func main() {
+	http.HandleFunc("/hello", func(w http.ResponseWriter, r *http.Request) {
+		// Create messages factory.
+		factory := g11n.New()
 
-	// Output:
-	// The answer to everything is 42.
+		// Initialize messages value.
+		var m Messages
+		factory.Init(&m)
+
+		// Set messages locale.
+		locale.SetLocale(factory, r)
+
+		fmt.Fprintf(w, m.Hello("World"))
+	})
+
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 ```
