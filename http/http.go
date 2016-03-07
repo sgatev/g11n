@@ -8,6 +8,7 @@ import (
 	"golang.org/x/text/language"
 )
 
+// SetLocale sets the locale of a MessageFactory from HTTP Request value.
 func SetLocale(mf *g11n.MessageFactory, r *http.Request) {
 	acceptLanguage := r.Header.Get("Accept-Language")
 	preferred, _, _ := language.ParseAcceptLanguage(acceptLanguage)

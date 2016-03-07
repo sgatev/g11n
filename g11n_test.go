@@ -198,6 +198,29 @@ func TestLocalizedMessageMultiple(t *testing.T) {
 		`Котка`)
 }
 
+func TestSetLocaleAfterInit(t *testing.T) {
+	type M struct {
+		MyLittleSomething func() SafeHTMLFormat `default:"Cat"`
+	}
+
+	bgLocale := TempFile(`
+	{
+	  "M.MyLittleSomething": "Котка"
+	}
+`)
+
+	factory := New()
+
+	m := factory.Init(&M{}).(*M)
+
+	factory.SetLocale(language.Bulgarian, "json", bgLocale)
+	factory.LoadLocale(language.Bulgarian)
+
+	testMessage(t,
+		string(m.MyLittleSomething()),
+		`Котка`)
+}
+
 func TestLocalizedMessageUnknownFormat(t *testing.T) {
 	type M struct {
 		MyLittleSomething func() SafeHTMLFormat `default:"Cat"`

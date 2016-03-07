@@ -48,31 +48,6 @@ func formatParam(value reflect.Value) interface{} {
 	return valueInterface
 }
 
-// messageHandler creates a handler that formats a message based on provided parameters.
-func messageHandler(messagePattern string, resultType reflect.Type) func([]reflect.Value) []reflect.Value {
-	return func(args []reflect.Value) []reflect.Value {
-		// Format message parameters.
-		var formattedParams []interface{}
-		for _, arg := range args {
-			formattedParams = append(formattedParams, formatParam(arg))
-		}
-
-		// Find the result message value.
-		message := fmt.Sprintf(messagePattern, formattedParams...)
-		messageValue := reflect.ValueOf(message)
-
-		// Format message result.
-		resultValue := reflect.New(resultType).Elem()
-		if resultFormatter, ok := resultValue.Interface().(resultFormatter); ok {
-			formattedResult := resultFormatter.G11nResult(message)
-			messageValue = reflect.ValueOf(formattedResult).Convert(resultType)
-		}
-		resultValue.Set(messageValue)
-
-		return []reflect.Value{resultValue}
-	}
-}
-
 // localeInfo encapsulates the data required to parse a localization file.
 type localeInfo struct {
 	format string
@@ -98,7 +73,7 @@ func New() *MessageFactory {
 func (mf *MessageFactory) Locales() []language.Tag {
 	locales := make([]language.Tag, 0, len(mf.locales))
 
-	for locale, _ := range mf.locales {
+	for locale := range mf.locales {
 		locales = append(locales, locale)
 	}
 
@@ -144,6 +119,36 @@ func (mf *MessageFactory) Init(structPtr interface{}) interface{} {
 	return structPtr
 }
 
+// messageHandler creates a handler that formats a message based on provided parameters.
+func (mf *MessageFactory) messageHandler(messagePattern, messageKey string, resultType reflect.Type) func([]reflect.Value) []reflect.Value {
+	return func(args []reflect.Value) []reflect.Value {
+		// Extract localized message.
+		if message, ok := mf.dictionary[messageKey]; ok {
+			messagePattern = message
+		}
+
+		// Format message parameters.
+		var formattedParams []interface{}
+		for _, arg := range args {
+			formattedParams = append(formattedParams, formatParam(arg))
+		}
+
+		// Find the result message value.
+		message := fmt.Sprintf(messagePattern, formattedParams...)
+		messageValue := reflect.ValueOf(message)
+
+		// Format message result.
+		resultValue := reflect.New(resultType).Elem()
+		if resultFormatter, ok := resultValue.Interface().(resultFormatter); ok {
+			formattedResult := resultFormatter.G11nResult(message)
+			messageValue = reflect.ValueOf(formattedResult).Convert(resultType)
+		}
+		resultValue.Set(messageValue)
+
+		return []reflect.Value{resultValue}
+	}
+}
+
 // initializeStruct initializes the message fields of a struct pointer.
 func (mf *MessageFactory) initializeStruct(structPtr interface{}) {
 	instance := reflect.Indirect(reflect.ValueOf(structPtr))
@@ -181,14 +186,10 @@ func (mf *MessageFactory) initializeField(
 	field reflect.StructField,
 	instanceField reflect.Value) {
 
+	messageKey := fmt.Sprintf("%v.%v", concreteType.Name(), field.Name)
+
 	// Extract default message.
 	messagePattern := field.Tag.Get(defaultMessageTag)
-
-	// Extract localized message.
-	messageKey := fmt.Sprintf("%v.%v", concreteType.Name(), field.Name)
-	if message, ok := mf.dictionary[messageKey]; ok {
-		messagePattern = message
-	}
 
 	if field.Type.Kind() == reflect.String {
 		// Initialize string field.
@@ -213,7 +214,7 @@ func (mf *MessageFactory) initializeField(
 
 		// Create proxy function for handling the message.
 		messageProxyFunc := reflect.MakeFunc(
-			field.Type, messageHandler(messagePattern, resultType))
+			field.Type, mf.messageHandler(messagePattern, messageKey, resultType))
 
 		instanceField.Set(messageProxyFunc)
 	}
