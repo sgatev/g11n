@@ -37,6 +37,8 @@ type resultFormatter interface {
 	G11nResult(formattedMessage string) string
 }
 
+type stringInitializer func()
+
 // formatParam extracts the data from a reflected argument value and returns it.
 func formatParam(value reflect.Value) interface{} {
 	valueInterface := value.Interface()
@@ -57,8 +59,9 @@ type localeInfo struct {
 // MessageFactory initializes message structs and provides language
 // translations to messages.
 type MessageFactory struct {
-	locales    map[language.Tag]localeInfo
-	dictionary map[string]string
+	locales            map[language.Tag]localeInfo
+	dictionary         map[string]string
+	stringInitializers []stringInitializer
 }
 
 // New returns a fresh G11n message factory.
@@ -109,7 +112,10 @@ func (mf *MessageFactory) LoadLocale(tag language.Tag) {
 	}
 
 	mf.dictionary = loader.Load(locale.path)
-	fmt.Println(mf.dictionary)
+
+	for _, initializer := range mf.stringInitializers {
+		initializer()
+	}
 }
 
 // Init initializes the message fields of a structure pointer.
@@ -200,6 +206,17 @@ func (mf *MessageFactory) initializeField(
 		if resultFormatter, ok := instanceField.Interface().(resultFormatter); ok {
 			message = resultFormatter.G11nResult(message)
 		}
+
+		mf.stringInitializers = append(mf.stringInitializers, func() {
+			message := messagePattern
+
+			// Extract localized message.
+			if messagePattern, ok := mf.dictionary[messageKey]; ok {
+				message = messagePattern
+			}
+
+			instanceField.SetString(message)
+		})
 
 		instanceField.SetString(message)
 	} else {
