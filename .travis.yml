@@ -6,7 +6,7 @@ before_install:
   - go get -v golang.org/x/tools/cmd/vet
   - go get -v golang.org/x/tools/cmd/cover
   - go get -v github.com/axw/gocov/gocov
-  - go get -v github.com/golang/lint/golint
+  - go get -v golang.org/x/lint/golint
   - go get -v github.com/mattn/goveralls
 
 install:
