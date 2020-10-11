@@ -6,7 +6,6 @@ before_install:
   - go get -v golang.org/x/tools/cmd/cover
   - go get -v github.com/axw/gocov/gocov
   - go get -u golang.org/x/lint/golint
-  - go get -v github.com/mattn/goveralls
 
 install:
   - go install -race -v std
@@ -17,4 +16,3 @@ script:
   - "$HOME/gopath/bin/golint ."
   - go test -timeout 1s -cpu=2 -race -v ./...
   - go test -timeout 1s -cpu=2 -covermode=atomic ./...
-  - $HOME/gopath/bin/goveralls -service=travis-ci
