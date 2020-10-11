@@ -1,6 +1,6 @@
 language: go
 go:
-  - 1.5
+  - 1.15.2
 
 before_install:
   - go get -v golang.org/x/tools/cmd/cover
