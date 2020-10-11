@@ -3,7 +3,7 @@ package http
 import (
 	"net/http"
 
-	"github.com/s2gatev/g11n"
+	"github.com/sgatev/g11n"
 
 	"golang.org/x/text/language"
 )

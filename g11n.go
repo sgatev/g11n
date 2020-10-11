@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
-	g11nLocale "github.com/s2gatev/g11n/locale"
+	g11nLocale "github.com/sgatev/g11n/locale"
 
 	"golang.org/x/text/language"
 )

@@ -4,8 +4,8 @@ import (
 	"reflect"
 	"testing"
 
-	. "github.com/s2gatev/g11n/locale"
-	. "github.com/s2gatev/g11n/test"
+	. "github.com/sgatev/g11n/locale"
+	. "github.com/sgatev/g11n/test"
 )
 
 func testLoadYaml(t *testing.T, filePath string, expected map[string]string) {

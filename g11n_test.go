@@ -7,8 +7,8 @@ import (
 
 	"golang.org/x/text/language"
 
-	. "github.com/s2gatev/g11n"
-	. "github.com/s2gatev/g11n/test"
+	. "github.com/sgatev/g11n"
+	. "github.com/sgatev/g11n/test"
 )
 
 func testMessage(t *testing.T, actual, expected string) {
